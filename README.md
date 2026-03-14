@@ -1,5 +1,11 @@
 # Document QA RAG (FastAPI + React + Notebook)
 
+##
+
+[![Django CI](https://github.com/alrafiabdullah/doc_rag/actions/workflows/scaffold.yml/badge.svg)](https://github.com/alrafiabdullah/doc_rag/actions/workflows/scaffold.yml)
+
+##
+
 This repository contains a complete Retrieval-Augmented Generation (RAG) workflow:
 - Backend API in `app/`
 - Frontend client in `front/`
