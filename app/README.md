@@ -10,6 +10,8 @@ This folder contains the FastAPI backend that powers document QA.
 - Question limit: 1,000 characters
 - Supports normal and streaming responses
 - Returns generation metrics including tokens per second
+- Optional Sentry error tracking
+- Cache hit/miss logs for vectorstore reuse
 
 ## Run
 
@@ -61,3 +63,13 @@ Optional environment variables:
 - `RATE_LIMIT_WINDOW_SECONDS`
 - `RATE_LIMIT_MAX_REQUESTS`
 - `DOCS_ACCESS_TOKEN` (required to enable `/docs` and `/openapi.json`)
+- `SENTRY_DSN`
+- `SENTRY_ENVIRONMENT`
+- `SENTRY_TRACES_SAMPLE_RATE`
+
+Sentry notes:
+- Errors are sent to Sentry only when `SENTRY_DSN` is set.
+- Unhandled exceptions are logged and captured.
+
+Cache logging notes:
+- Logs: `vectorstore_cache_hit`, `vectorstore_cache_miss`, `vectorstore_cache_miss_expired`, `vectorstore_cache_store`.
