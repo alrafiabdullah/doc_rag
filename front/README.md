@@ -38,7 +38,7 @@ The app uses `VITE_API_URL` if provided, otherwise defaults to:
 To override:
 
 ```bash
-VITE_API_URL="https://your-backend-domain/rag/query" yarn dev
+VITE_API_URL="https://your-backend-domain/rag/query" VITE_MAX_FILE_SIZE_MB=1 yarn dev
 ```
 
 ## Notes

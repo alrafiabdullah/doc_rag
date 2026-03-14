@@ -34,12 +34,11 @@ cd ..
 ## 2) Run Backend (FastAPI)
 
 ```bash
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+uvicorn app.main:app --reload
 ```
 
 Backend docs:
 - Swagger UI: http://localhost:8000/docs
-- Health: http://localhost:8000/health
 
 ## 3) Run Frontend
 
@@ -54,7 +53,7 @@ Open the URL printed by Vite (typically http://localhost:5173).
 
 - Paste your Hugging Face token in the frontend (stored in browser localStorage)
 - Upload a `.txt` or `.pdf`
-- Enter a question (up to 10,000 characters)
+- Enter a question (up to 1,000 characters)
 - Toggle stream on/off and submit
 
 ## Environment Variables (Backend)
