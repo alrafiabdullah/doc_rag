@@ -120,8 +120,6 @@ function App() {
 		setAnswer("");
 		setSources([]);
 		setMeta(null);
-		const res = await fetch(`${DEFAULT_API_URL}/health`);
-		console.log("API is reachable:", res.ok);
 
 		try {
 			const formData = new FormData();
