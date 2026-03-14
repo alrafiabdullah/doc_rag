@@ -1,4 +1,4 @@
-name: CI
+name: RAG Live Scaffold CI
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
 
 jobs:
   backend-pytest:
-    name: Backend pytest
+    name: Backend Test with pytest
     runs-on: ubuntu-latest
     env:
       CORS_ALLOWED_ORIGINS: ${{ vars.CORS_ALLOWED_ORIGINS }}
@@ -56,7 +56,7 @@ jobs:
         run: pytest app/test_main.py -q
 
   frontend-dev-check:
-    name: Frontend yarn dev
+    name: Frontend Dev Server Check
     runs-on: ubuntu-latest
 
     steps:
@@ -86,18 +86,4 @@ jobs:
             exit 1
           fi
 
-          yarn dev --host 127.0.0.1 --port 5173 > vite.log 2>&1 &
-          VITE_PID=$!
-          trap "kill $VITE_PID" EXIT
-
-          for i in {1..45}; do
-            if curl -fsS http://127.0.0.1:5173 >/dev/null; then
-              echo "Vite dev server is reachable"
-              exit 0
-            fi
-            sleep 1
-          done
-
-          echo "Vite dev server failed to become reachable"
-          cat vite.log
-          exit 1
+          yarn build

@@ -13,7 +13,6 @@ From repository root:
 
 ```bash
 pip install -r requirements.txt
-jupyter lab
 ```
 
 Open `notebooks/document_qa_rag.ipynb`.
