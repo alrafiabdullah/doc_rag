@@ -289,6 +289,17 @@ function App() {
 							autoComplete="off"
 							required
 						/>
+						<small>
+							We don&apos;t store your token or document. Everything happens at runtime in memory. View this project on{" "}
+							<a
+								href="https://github.com/alrafiabdullah/doc_rag"
+								target="_blank"
+								rel="noreferrer"
+							>
+								GitHub
+							</a>
+							.
+						</small>
 					</label>
 
 					<label className="field">
