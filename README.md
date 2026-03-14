@@ -2,7 +2,7 @@
 
 ##
 
-[![Django CI](https://github.com/alrafiabdullah/doc_rag/actions/workflows/scaffold.yml/badge.svg)](https://github.com/alrafiabdullah/doc_rag/actions/workflows/scaffold.yml)
+[![Scaffold CI](https://github.com/alrafiabdullah/doc_rag/actions/workflows/scaffold.yml/badge.svg)](https://github.com/alrafiabdullah/doc_rag/actions/workflows/scaffold.yml)
 
 ##
 
