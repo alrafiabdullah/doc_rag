@@ -86,18 +86,4 @@ jobs:
             exit 1
           fi
 
-          yarn dev --host 127.0.0.1 --port 5173 > vite.log 2>&1 &
-          VITE_PID=$!
-          trap "kill $VITE_PID" EXIT
-
-          for i in {1..45}; do
-            if curl -fsS http://127.0.0.1:5173 >/dev/null; then
-              echo "Vite dev server is reachable"
-              exit 0
-            fi
-            sleep 1
-          done
-
-          echo "Vite dev server failed to become reachable"
-          cat vite.log
-          exit 1
+          yarn build
