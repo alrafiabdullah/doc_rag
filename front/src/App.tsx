@@ -1,6 +1,8 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { ComponentProps } from "react";
 import "./App.css";
+import NotFoundPage from "./pages/NotFoundPage";
+import ServerErrorPage from "./pages/ServerErrorPage";
 
 type Source = {
 	rank: number;
@@ -33,6 +35,17 @@ const HF_TOKEN_STORAGE_KEY = "hf_token";
 const RATE_LIMIT_MESSAGE = "Rate limit: 10 requests per 5 minutes.";
 const DEFAULT_API_URL =
 	import.meta.env.VITE_API_URL ?? "http://localhost:8000";
+const SERVER_ERROR_PATH = "/err";
+
+function navigateToServerError() {
+	if (typeof window === "undefined") {
+		return;
+	}
+
+	if (window.location.pathname !== SERVER_ERROR_PATH) {
+		window.location.assign(SERVER_ERROR_PATH);
+	}
+}
 
 function App() {
 	const [hfToken, setHfToken] = useState(() => {
@@ -51,6 +64,28 @@ function App() {
 	const [sources, setSources] = useState<Source[]>([]);
 	const [meta, setMeta] = useState<QueryMeta | null>(null);
 	const [error, setError] = useState<string | null>(null);
+
+	const pathname = typeof window !== "undefined" ? window.location.pathname : "/";
+	const isServerErrorRoute = pathname === SERVER_ERROR_PATH;
+	const isHomeRoute = pathname === "/" || pathname === "";
+
+	useEffect(() => {
+		if (isServerErrorRoute) {
+			return;
+		}
+
+		const handleGlobalError = () => {
+			navigateToServerError();
+		};
+
+		window.addEventListener("error", handleGlobalError);
+		window.addEventListener("unhandledrejection", handleGlobalError);
+
+		return () => {
+			window.removeEventListener("error", handleGlobalError);
+			window.removeEventListener("unhandledrejection", handleGlobalError);
+		};
+	}, [isServerErrorRoute]);
 
 	const charsLeft = useMemo(
 		() => MAX_QUESTION_CHARS - question.length,
@@ -219,6 +254,14 @@ function App() {
 			setLoading(false);
 		}
 	};
+
+	if (isServerErrorRoute) {
+		return <ServerErrorPage />;
+	}
+
+	if (!isHomeRoute) {
+		return <NotFoundPage />;
+	}
 
 	return (
 		<main className="page">
