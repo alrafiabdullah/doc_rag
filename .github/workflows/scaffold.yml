@@ -1,7 +1,7 @@
 name: RAG Live Scaffold CI
 
 on:
-  push:
+  pull_request:
     branches:
       - main
   workflow_dispatch:
