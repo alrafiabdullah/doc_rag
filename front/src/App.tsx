@@ -226,7 +226,7 @@ function App() {
 				<p className="eyebrow">RAG Frontend</p>
 				<h1>Upload, Ask, and Stream Answers</h1>
 				<p className="subtitle">
-					Mobile-first interface for your FastAPI backend. Accepts{" "}
+					Accepts{" "}
 					<strong>.txt</strong> and <strong>.pdf</strong>, supports streamed
 					responses, and shows generation speed.
 				</p>
