@@ -1,14 +1,52 @@
 import os
+import logging
 from typing import Any
 
 from fastapi import FastAPI, File, Form, Header, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.docs import get_swagger_ui_html
+import sentry_sdk
+from sentry_sdk.integrations.fastapi import FastApiIntegration
+from sentry_sdk.integrations.logging import LoggingIntegration
 
 from .config import settings
 from .rag import run_rag_query
 from .security import resolve_hf_token
 from .rate_limit import InMemoryRateLimiter
+
+
+logger = logging.getLogger(__name__)
+
+
+def _init_sentry() -> None:
+    if not settings.sentry_dsn:
+        return
+
+    sentry_logging = LoggingIntegration(
+        level=logging.INFO,
+        event_level=logging.ERROR,
+    )
+    sentry_sdk.init(
+        dsn=settings.sentry_dsn,
+        # Add data like request headers and IP for users,
+        # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+        send_default_pii=True,
+        # Enable sending logs to Sentry
+        enable_logs=True,
+        # Set traces_sample_rate to 1.0 to capture 100%
+        # of transactions for tracing.
+        traces_sample_rate=1.0,
+        # Set profile_session_sample_rate to 1.0 to profile 100%
+        # of profile sessions.
+        profile_session_sample_rate=1.0,
+        # Set profile_lifecycle to "trace" to automatically
+        # run the profiler on when there is an active transaction
+        profile_lifecycle="trace",
+        integrations=[FastApiIntegration(), sentry_logging],
+    )
+
+
+_init_sentry()
 
 
 app = FastAPI(
@@ -58,7 +96,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_allowed_origins,
     allow_credentials=True,
-    allow_methods=["POST", "GET"],
+    allow_methods=["*"],
     allow_headers=["*"],
 )
 
@@ -66,6 +104,17 @@ rate_limiter = InMemoryRateLimiter(
     window_seconds=settings.rate_limit_window_seconds,
     max_requests=settings.rate_limit_max_requests,
 )
+
+
+@app.middleware("http")
+async def sentry_error_middleware(request: Request, call_next):
+    try:
+        return await call_next(request)
+    except Exception as exc:
+        logger.exception("Unhandled server error", extra={"path": str(request.url.path)})
+        if settings.sentry_dsn:
+            sentry_sdk.capture_exception(exc)
+        raise
 
 
 @app.post("/rag/query")
