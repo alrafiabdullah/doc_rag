@@ -1,10 +1,13 @@
 import os
 import unittest
 import importlib
+import io
 
 from pathlib import Path
+from types import SimpleNamespace
 from unittest import mock
 
+from fastapi import UploadFile
 from fastapi.responses import JSONResponse
 from fastapi.testclient import TestClient
 
@@ -117,3 +120,104 @@ class TestFastAPIApp(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+def _make_upload_file(content: bytes, filename: str = "doc.txt") -> UploadFile:
+    return UploadFile(filename=filename, file=io.BytesIO(content))
+
+
+def _fake_llm_response(answer: str = "mock answer") -> SimpleNamespace:
+    return SimpleNamespace(
+        choices=[
+            SimpleNamespace(
+                message=SimpleNamespace(content=answer),
+            )
+        ]
+    )
+
+
+class _FakeVectorStore:
+    def similarity_search(self, _question: str, k: int = 3):
+        return [SimpleNamespace(page_content="context", metadata={"source": "doc.txt"}) for _ in range(k)]
+
+
+class TestVectorStoreCache(unittest.IsolatedAsyncioTestCase):
+    def setUp(self) -> None:
+        import app.config as config
+        import app.rag as rag
+
+        importlib.reload(config)
+        importlib.reload(rag)
+        self.rag = rag
+        self.settings = config.settings
+
+        with self.rag._VECTORSTORE_CACHE_LOCK:
+            self.rag._VECTORSTORE_CACHE.clear()
+
+    def tearDown(self) -> None:
+        with self.rag._VECTORSTORE_CACHE_LOCK:
+            self.rag._VECTORSTORE_CACHE.clear()
+
+    async def test_cache_hit_reuses_vectorstore(self):
+        fake_vectorstore = _FakeVectorStore()
+
+        with (
+            mock.patch("app.rag.HuggingFaceEndpointEmbeddings", return_value=object()),
+            mock.patch("app.rag.InMemoryVectorStore.from_documents", return_value=fake_vectorstore) as from_documents,
+            mock.patch("app.rag.InferenceClient") as inference_client,
+        ):
+            inference_client.return_value.chat_completion.return_value = _fake_llm_response()
+
+            response_1 = await self.rag.run_rag_query(
+                file=_make_upload_file(b"same document content"),
+                question="What is this?",
+                top_k=2,
+                stream=False,
+                hf_token="hf_abcdefghijklmnopqrstuvwxyz1234",
+                settings=self.settings,
+            )
+            self.assertEqual(response_1.status_code, 200)
+
+            response_2 = await self.rag.run_rag_query(
+                file=_make_upload_file(b"same document content"),
+                question="What is this?",
+                top_k=2,
+                stream=False,
+                hf_token="hf_abcdefghijklmnopqrstuvwxyz1234",
+                settings=self.settings,
+            )
+            self.assertEqual(response_2.status_code, 200)
+
+            self.assertEqual(from_documents.call_count, 1)
+
+    async def test_cache_miss_rebuilds_vectorstore_for_different_document(self):
+        fake_vectorstore = _FakeVectorStore()
+
+        with (
+            mock.patch("app.rag.HuggingFaceEndpointEmbeddings", return_value=object()),
+            mock.patch("app.rag.InMemoryVectorStore.from_documents", return_value=fake_vectorstore) as from_documents,
+            mock.patch("app.rag.InferenceClient") as inference_client,
+        ):
+            inference_client.return_value.chat_completion.return_value = _fake_llm_response()
+
+            response_1 = await self.rag.run_rag_query(
+                file=_make_upload_file(b"document content one"),
+                question="What is this?",
+                top_k=2,
+                stream=False,
+                hf_token="hf_abcdefghijklmnopqrstuvwxyz1234",
+                settings=self.settings,
+            )
+            self.assertEqual(response_1.status_code, 200)
+
+            response_2 = await self.rag.run_rag_query(
+                file=_make_upload_file(b"document content two"),
+                question="What is this?",
+                top_k=2,
+                stream=False,
+                hf_token="hf_abcdefghijklmnopqrstuvwxyz1234",
+                settings=self.settings,
+            )
+            self.assertEqual(response_2.status_code, 200)
+
+            self.assertEqual(from_documents.call_count, 2)
