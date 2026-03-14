@@ -1,6 +1,8 @@
 import io
 import json
 import time
+import hashlib
+import threading
 
 from pathlib import Path
 from typing import Any, Iterable
@@ -36,6 +38,76 @@ Question: {question}
 
 Helpful Answer:"""
 )
+
+
+_VECTORSTORE_CACHE_TTL_SECONDS = 300
+_VECTORSTORE_CACHE_MAX_ITEMS = 64
+_VECTORSTORE_CACHE: dict[str, tuple[float, InMemoryVectorStore]] = {}
+_VECTORSTORE_CACHE_LOCK = threading.Lock()
+
+
+def _make_vectorstore_cache_key(
+    *,
+    file_name: str,
+    content: bytes,
+    settings: Settings,
+    hf_token: str,
+) -> str:
+    content_hash = hashlib.sha256(content).hexdigest()
+    token_hash = hashlib.sha256(hf_token.encode("utf-8")).hexdigest()
+    return "|".join(
+        [
+            file_name,
+            content_hash,
+            settings.embedding_model,
+            str(settings.chunk_size),
+            str(settings.chunk_overlap),
+            token_hash,
+        ]
+    )
+
+
+def _get_cached_vectorstore(cache_key: str) -> InMemoryVectorStore | None:
+    now = time.time()
+    with _VECTORSTORE_CACHE_LOCK:
+        expired_keys = [
+            key
+            for key, (expires_at, _) in _VECTORSTORE_CACHE.items()
+            if expires_at <= now
+        ]
+        for key in expired_keys:
+            _VECTORSTORE_CACHE.pop(key, None)
+
+        cached = _VECTORSTORE_CACHE.get(cache_key)
+        if not cached:
+            return None
+
+        expires_at, vectorstore = cached
+        if expires_at <= now:
+            _VECTORSTORE_CACHE.pop(cache_key, None)
+            return None
+
+        return vectorstore
+
+
+def _set_cached_vectorstore(cache_key: str, vectorstore: InMemoryVectorStore) -> None:
+    now = time.time()
+    expires_at = now + _VECTORSTORE_CACHE_TTL_SECONDS
+
+    with _VECTORSTORE_CACHE_LOCK:
+        expired_keys = [
+            key
+            for key, (entry_expires_at, _) in _VECTORSTORE_CACHE.items()
+            if entry_expires_at <= now
+        ]
+        for key in expired_keys:
+            _VECTORSTORE_CACHE.pop(key, None)
+
+        if len(_VECTORSTORE_CACHE) >= _VECTORSTORE_CACHE_MAX_ITEMS:
+            oldest_key = min(_VECTORSTORE_CACHE, key=lambda key: _VECTORSTORE_CACHE[key][0])
+            _VECTORSTORE_CACHE.pop(oldest_key, None)
+
+        _VECTORSTORE_CACHE[cache_key] = (expires_at, vectorstore)
 
 
 def _extract_text_from_upload(upload: UploadFile, content: bytes) -> str:
@@ -133,23 +205,33 @@ async def run_rag_query(
             detail=f"File size exceeds {settings.max_file_size_megabytes}MB limit",
         )
 
-    raw_text = _extract_text_from_upload(file, content)
-
-    docs = [Document(page_content=raw_text, metadata={"source": file.filename or "uploaded_file"})]
-    splitter = RecursiveCharacterTextSplitter(
-        chunk_size=settings.chunk_size,
-        chunk_overlap=settings.chunk_overlap,
-        separators=["\n\n", "\n", ". ", " ", ""],
+    cache_key = _make_vectorstore_cache_key(
+        file_name=file.filename or "uploaded_file",
+        content=content,
+        settings=settings,
+        hf_token=hf_token,
     )
-    chunks = splitter.split_documents(docs)
-    if not chunks:
-        raise HTTPException(status_code=400, detail="No text chunks could be created from file")
+    vectorstore = _get_cached_vectorstore(cache_key)
 
-    embeddings = HuggingFaceEndpointEmbeddings(
-        model=settings.embedding_model,
-        huggingfacehub_api_token=hf_token,
-    )
-    vectorstore = InMemoryVectorStore.from_documents(chunks, embedding=embeddings)
+    if vectorstore is None:
+        raw_text = _extract_text_from_upload(file, content)
+
+        docs = [Document(page_content=raw_text, metadata={"source": file.filename or "uploaded_file"})]
+        splitter = RecursiveCharacterTextSplitter(
+            chunk_size=settings.chunk_size,
+            chunk_overlap=settings.chunk_overlap,
+            separators=["\n\n", "\n", ". ", " ", ""],
+        )
+        chunks = splitter.split_documents(docs)
+        if not chunks:
+            raise HTTPException(status_code=400, detail="No text chunks could be created from file")
+
+        embeddings = HuggingFaceEndpointEmbeddings(
+            model=settings.embedding_model,
+            huggingfacehub_api_token=hf_token,
+        )
+        vectorstore = InMemoryVectorStore.from_documents(chunks, embedding=embeddings)
+        _set_cached_vectorstore(cache_key, vectorstore)
 
     k = max(1, min(int(top_k), 10))
     retrieved_docs = vectorstore.similarity_search(clean_question, k=k)
