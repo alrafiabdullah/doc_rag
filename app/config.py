@@ -27,6 +27,8 @@ class Settings:
     max_file_size_bytes: int
     rate_limit_window_seconds: int
     rate_limit_max_requests: int
+    sentry_dsn: str | None
+    sentry_traces_sample_rate: float
 
 
 
@@ -46,4 +48,6 @@ settings = Settings(
     max_file_size_bytes=round(float(os.getenv("MAX_FILE_SIZE_MB")) * 1024 * 1024),
     rate_limit_window_seconds=int(os.getenv("RATE_LIMIT_WINDOW_SECONDS")),
     rate_limit_max_requests=int(os.getenv("RATE_LIMIT_MAX_REQUESTS")),
+    sentry_dsn=os.getenv("SENTRY_DSN"),
+    sentry_traces_sample_rate=float(os.getenv("SENTRY_TRACES_SAMPLE_RATE")),
 )
