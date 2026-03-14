@@ -42,7 +42,11 @@ If `hf_token` is omitted, backend tries `HUGGINGFACE_API_KEY`/`HF_TOKEN`/`HUGGIN
 
 ## Useful Endpoints
 
-- `GET /docs`
+- `GET /docs` (private; requires `DOCS_ACCESS_TOKEN`)
+
+For private docs access, send one of:
+- `Authorization: Bearer <DOCS_ACCESS_TOKEN>`
+- `X-Docs-Token: <DOCS_ACCESS_TOKEN>`
 
 ## Backend Config
 
@@ -56,3 +60,4 @@ Optional environment variables:
 - `MAX_FILE_SIZE_MB`
 - `RATE_LIMIT_WINDOW_SECONDS`
 - `RATE_LIMIT_MAX_REQUESTS`
+- `DOCS_ACCESS_TOKEN` (required to enable `/docs` and `/openapi.json`)
