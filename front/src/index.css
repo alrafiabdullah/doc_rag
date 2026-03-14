@@ -1,0 +1,56 @@
+:root {
+	--vintage-cream: #f7f6e5;
+	--vintage-aqua: #76d2db;
+	--vintage-red: #da4848;
+	--vintage-plum: #36064d;
+
+	--vintage-cream-rgb: 247, 246, 229;
+	--vintage-aqua-rgb: 118, 210, 219;
+	--vintage-red-rgb: 218, 72, 72;
+	--vintage-plum-rgb: 54, 6, 77;
+
+	--text: var(--vintage-plum);
+	--text-h: var(--vintage-plum);
+	--bg: var(--vintage-cream);
+	--surface: rgba(var(--vintage-cream-rgb), 0.95);
+	--border: rgba(var(--vintage-aqua-rgb), 0.85);
+	--accent: var(--vintage-red);
+	--shadow-soft: 0 10px 26px rgba(var(--vintage-plum-rgb), 0.16);
+
+	font-family:
+		Inter,
+		ui-sans-serif,
+		system-ui,
+		-apple-system,
+		Segoe UI,
+		Roboto,
+		sans-serif;
+	font-size: 16px;
+	line-height: 1.45;
+	color: var(--text);
+	background-color: var(--bg);
+	font-synthesis: none;
+	text-rendering: optimizeLegibility;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+	min-height: 100dvh;
+}
+
+body {
+	margin: 0;
+	background:
+		radial-gradient(
+			circle at 10% 0%,
+			rgba(var(--vintage-aqua-rgb), 0.3),
+			transparent 40%
+		),
+		radial-gradient(
+			circle at 90% 0%,
+			rgba(var(--vintage-red-rgb), 0.2),
+			transparent 40%
+		),
+		var(--bg);
+}
