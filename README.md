@@ -1,4 +1,4 @@
-# NLP Projects: Document QA RAG (FastAPI + React + Notebook)
+# Document QA RAG (FastAPI + React + Notebook)
 
 This repository contains a complete Retrieval-Augmented Generation (RAG) workflow:
 - Backend API in `app/`
