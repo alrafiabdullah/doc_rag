@@ -19,7 +19,7 @@ class AppErrorBoundary extends Component<Props, State> {
         return { hasError: true };
     }
 
-    componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    componentDidCatch(_error: Error, _errorInfo: ErrorInfo) {
         // console.error("Frontend runtime failure", error, errorInfo);
     }
 
