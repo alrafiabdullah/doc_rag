@@ -3,6 +3,7 @@ import json
 import time
 import hashlib
 import threading
+import logging
 
 from pathlib import Path
 from typing import Any, Iterable
@@ -16,6 +17,7 @@ from langchain_core.vectorstores import InMemoryVectorStore
 from langchain_huggingface import HuggingFaceEndpointEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from pypdf import PdfReader
+import sentry_sdk
 
 from .config import Settings
 
@@ -44,6 +46,8 @@ _VECTORSTORE_CACHE_TTL_SECONDS = 300
 _VECTORSTORE_CACHE_MAX_ITEMS = 64
 _VECTORSTORE_CACHE: dict[str, tuple[float, InMemoryVectorStore]] = {}
 _VECTORSTORE_CACHE_LOCK = threading.Lock()
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 def _make_vectorstore_cache_key(
@@ -80,13 +84,19 @@ def _get_cached_vectorstore(cache_key: str) -> InMemoryVectorStore | None:
 
         cached = _VECTORSTORE_CACHE.get(cache_key)
         if not cached:
+            logger.info("vectorstore_cache_miss")
+            sentry_sdk.add_breadcrumb(category="cache", message="vectorstore_cache_miss", level="info")
             return None
 
         expires_at, vectorstore = cached
         if expires_at <= now:
             _VECTORSTORE_CACHE.pop(cache_key, None)
+            logger.info("vectorstore_cache_miss_expired")
+            sentry_sdk.add_breadcrumb(category="cache", message="vectorstore_cache_miss_expired", level="info")
             return None
 
+        logger.info("vectorstore_cache_hit")
+        sentry_sdk.add_breadcrumb(category="cache", message="vectorstore_cache_hit", level="info")
         return vectorstore
 
 
@@ -108,6 +118,8 @@ def _set_cached_vectorstore(cache_key: str, vectorstore: InMemoryVectorStore) ->
             _VECTORSTORE_CACHE.pop(oldest_key, None)
 
         _VECTORSTORE_CACHE[cache_key] = (expires_at, vectorstore)
+        logger.info("vectorstore_cache_store")
+        sentry_sdk.add_breadcrumb(category="cache", message="vectorstore_cache_store", level="info")
 
 
 def _extract_text_from_upload(upload: UploadFile, content: bytes) -> str:
