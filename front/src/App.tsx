@@ -29,6 +29,7 @@ type QueryResponse = {
 type FormSubmitHandler = NonNullable<ComponentProps<"form">["onSubmit"]>;
 
 const MAX_QUESTION_CHARS = 1_000;
+const QUESTION_WARN_THRESHOLD = Math.floor(MAX_QUESTION_CHARS * 0.2);
 const MAX_FILE_SIZE_BYTES = parseFloat(import.meta.env.VITE_MAX_FILE_SIZE_MB) * 1024 * 1024;
 const STREAM_META_TAG = "[STREAM_META]";
 const HF_TOKEN_STORAGE_KEY = "hf_token";
@@ -324,7 +325,7 @@ function App() {
 							rows={5}
 							required
 						/>
-						<small className={charsLeft < 800 ? "warn" : ""}>
+						<small className={charsLeft < QUESTION_WARN_THRESHOLD ? "warn" : ""}>
 							{charsLeft} characters left
 						</small>
 					</label>
