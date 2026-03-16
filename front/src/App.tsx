@@ -272,7 +272,10 @@ function App() {
 				<p className="subtitle">
 					Accepts{" "}
 					<strong>.txt</strong> and <strong>.pdf</strong>, supports streamed
-					responses, and shows generation speed.
+					responses, and shows generation speed. Portfolio: {" "}
+					<a href="https://abdullahalrafi.com?ti=rag" target="_blank" rel="noreferrer">
+						abdullahalrafi.com
+					</a>
 				</p>
 			</section>
 
