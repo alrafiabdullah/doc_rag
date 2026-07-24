@@ -57,7 +57,7 @@ function App() {
 	});
 	const [question, setQuestion] = useState("");
 	const [topK, setTopK] = useState(3);
-	const [stream, setStream] = useState(false);
+	const [stream, setStream] = useState(true);
 	const [file, setFile] = useState<File | null>(null);
 
 	const [loading, setLoading] = useState(false);
