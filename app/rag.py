@@ -242,7 +242,20 @@ async def run_rag_query(
             model=settings.embedding_model,
             huggingfacehub_api_token=hf_token,
         )
-        vectorstore = InMemoryVectorStore.from_documents(chunks, embedding=embeddings)
+        try:
+            vectorstore = InMemoryVectorStore.from_documents(chunks, embedding=embeddings)
+        except Exception as e:
+            if "401" in str(e):
+                return JSONResponse(
+                    status_code=401,
+                    content={"detail": "Invalid Hugging Face token. Refresh/rotate your token and try again."},
+                )
+
+            logger.exception("Error creating vectorstore", extra={"file_name": file.filename, "error": str(e)})
+            return JSONResponse(
+                status_code=500,
+                content={"detail": f"Error creating vectorstore: {e}"},
+            )
         _set_cached_vectorstore(cache_key, vectorstore)
 
     k = max(1, min(int(top_k), 10))

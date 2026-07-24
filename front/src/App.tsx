@@ -30,10 +30,12 @@ type FormSubmitHandler = NonNullable<ComponentProps<"form">["onSubmit"]>;
 
 const MAX_QUESTION_CHARS = 1_000;
 const QUESTION_WARN_THRESHOLD = Math.floor(MAX_QUESTION_CHARS * 0.2);
-const MAX_FILE_SIZE_BYTES = parseFloat(import.meta.env.VITE_MAX_FILE_SIZE_MB) * 1024 * 1024;
+const MAX_FILE_SIZE_LIMIT = import.meta.env.VITE_MAX_FILE_SIZE_MB;
+const MAX_FILE_SIZE_BYTES = parseFloat(MAX_FILE_SIZE_LIMIT) * 1024 * 1024;
 const STREAM_META_TAG = "[STREAM_META]";
 const HF_TOKEN_STORAGE_KEY = "hf_token";
-const RATE_LIMIT_MESSAGE = "Rate limit: 10 requests per 5 minutes.";
+const RATE_LIMIT_MAX_REQUEST = parseInt(import.meta.env.VITE_RATE_LIMIT_MAX_REQUESTS)
+const RATE_LIMIT_MESSAGE = `Rate limit: ${RATE_LIMIT_MAX_REQUEST} requests per 5 minutes.`;
 const DEFAULT_API_URL =
 	import.meta.env.VITE_API_URL ?? "http://localhost:8000";
 const SERVER_ERROR_PATH = "/err";
@@ -57,7 +59,7 @@ function App() {
 	});
 	const [question, setQuestion] = useState("");
 	const [topK, setTopK] = useState(3);
-	const [stream, setStream] = useState(false);
+	const [stream, setStream] = useState(true);
 	const [file, setFile] = useState<File | null>(null);
 
 	const [loading, setLoading] = useState(false);
@@ -115,7 +117,7 @@ function App() {
 
 		if (nextFile.size > MAX_FILE_SIZE_BYTES) {
 			setFile(null);
-			setError(`File size exceeds ${import.meta.env.VITE_MAX_FILE_SIZE_MB}MB limit.`);
+			setError(`File size exceeds ${MAX_FILE_SIZE_LIMIT}MB limit.`);
 			return;
 		}
 
@@ -132,7 +134,7 @@ function App() {
 		}
 
 		if (file.size > MAX_FILE_SIZE_BYTES) {
-			setError(`File size exceeds ${import.meta.env.VITE_MAX_FILE_SIZE_MB}MB limit.`);
+			setError(`File size exceeds ${MAX_FILE_SIZE_LIMIT}MB limit.`);
 			return;
 		}
 
@@ -173,6 +175,10 @@ function App() {
 			});
 
 			if (!response.ok) {
+				// Handle specific error cases
+				if (response.status === 402) throw new Error("Payment required. Please check your Hugging Face subscription.");
+
+				// Handle rest of the errors
 				const maybeError = await response.json().then((data) => data.detail);
 				throw new Error(maybeError || `Request failed (${response.status})`);
 			}

@@ -68,22 +68,27 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "24"
+          cache: yarn
+          cache-dependency-path: front/yarn.lock
 
       - name: Enable Corepack
-        run: corepack enable
+        run: |
+          corepack enable
+          corepack prepare yarn@4.17.1 --activate
 
       - name: Install frontend dependencies
         working-directory: front
         run: yarn install --immutable
 
-      - name: Run yarn dev and verify server
+      - name: Run frontend build
         working-directory: front
         env:
           VITE_API_URL: ${{ vars.VITE_API_URL }}
           VITE_MAX_FILE_SIZE_MB: ${{ vars.VITE_MAX_FILE_SIZE_MB }}
+          VITE_RATE_LIMIT_MAX_REQUESTS: ${{ vars.VITE_RATE_LIMIT_MAX_REQUESTS }}
         run: |
-          if [ -z "$VITE_API_URL" ] || [ -z "$VITE_MAX_FILE_SIZE_MB" ]; then
-            echo "Missing required frontend vars: VITE_API_URL and/or VITE_MAX_FILE_SIZE_MB"
+          if [ -z "$VITE_API_URL" ] || [ -z "$VITE_MAX_FILE_SIZE_MB" ] || [ -z "$VITE_RATE_LIMIT_MAX_REQUESTS" ]; then
+            echo "Missing required frontend vars: VITE_API_URL and/or VITE_MAX_FILE_SIZE_MB and/or VITE_RATE_LIMIT_MAX_REQUESTS"
             exit 1
           fi
 
