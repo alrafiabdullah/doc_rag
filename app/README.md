@@ -21,6 +21,8 @@ From repository root:
 uvicorn app.main:app --reload
 ```
 
+The frontend lives in `front/` and uses Yarn 4.17.1 with Corepack. For the frontend install, build, and deploy commands, see [front/README.md](../front/README.md).
+
 ## API Contract
 
 `POST /rag/query` multipart form fields:
@@ -41,6 +43,10 @@ If `hf_token` is omitted, backend tries `HUGGINGFACE_API_KEY`/`HF_TOKEN`/`HUGGIN
 - Never commit real tokens in code or `.env`.
 - Keep real secrets in deployment environment variables.
 - Rotate the token immediately if it is ever exposed.
+
+## CI Notes
+
+The repository workflow runs backend tests with pytest and validates the frontend with a Yarn 4 immutable install followed by a production build.
 
 ## Useful Endpoints
 
