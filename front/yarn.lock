@@ -200,6 +200,25 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@cloudflare/vite-plugin@npm:^1.47.0":
+  version: 1.47.0
+  resolution: "@cloudflare/vite-plugin@npm:1.47.0"
+  dependencies:
+    "@cloudflare/unenv-preset": "npm:2.16.1"
+    miniflare: "npm:4.20260722.0"
+    unenv: "npm:2.0.0-rc.24"
+    workerd: "npm:1.20260722.1"
+    wrangler: "npm:4.114.0"
+    ws: "npm:8.21.0"
+  peerDependencies:
+    vite: ^6.1.0 || ^7.0.0 || ^8.0.0
+    wrangler: ^4.114.0
+  bin:
+    cf-vite: bin/cf-vite
+  checksum: 10c0/1748d51fbee3b37769b437e6f6f87aaed1a69b0df404fd948ff1ae4fb16a8985403e8d88999348d89e7a67ca6e3d91da7b8b8e906ce4810e04e2c880ed450737
+  languageName: node
+  linkType: hard
+
 "@cloudflare/workerd-darwin-64@npm:1.20260722.1":
   version: 1.20260722.1
   resolution: "@cloudflare/workerd-darwin-64@npm:1.20260722.1"
@@ -1933,6 +1952,7 @@ __metadata:
   resolution: "front@workspace:."
   dependencies:
     "@babel/core": "npm:^7.29.0"
+    "@cloudflare/vite-plugin": "npm:^1.47.0"
     "@eslint/js": "npm:^9.39.4"
     "@rolldown/plugin-babel": "npm:^0.2.3"
     "@types/babel__core": "npm:^7.20.5"
@@ -1950,7 +1970,7 @@ __metadata:
     typescript: "npm:~5.9.3"
     typescript-eslint: "npm:^8.56.1"
     vite: "npm:^8.0.0"
-    wrangler: "npm:^4.17.1"
+    wrangler: "npm:^4.114.0"
   languageName: unknown
   linkType: soft
 
@@ -3064,7 +3084,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"wrangler@npm:^4.17.1":
+"wrangler@npm:4.114.0, wrangler@npm:^4.114.0":
   version: 4.114.0
   resolution: "wrangler@npm:4.114.0"
   dependencies:
