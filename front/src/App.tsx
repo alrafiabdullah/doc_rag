@@ -173,6 +173,10 @@ function App() {
 			});
 
 			if (!response.ok) {
+				// Handle specific error cases
+				if (response.status === 402) throw new Error("Payment required. Please check your Hugging Face subscription.");
+
+				// Handle rest of the errors
 				const maybeError = await response.json().then((data) => data.detail);
 				throw new Error(maybeError || `Request failed (${response.status})`);
 			}
