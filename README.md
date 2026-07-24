@@ -13,6 +13,8 @@ This repository contains a complete Retrieval-Augmented Generation (RAG) workflo
 
 The system accepts only `.txt` and `.pdf`, does not persist uploaded files, and supports streamed answers.
 
+The frontend is managed with Yarn 4.17.1 through Corepack and is deployed with Wrangler. The main CI workflow validates the backend with pytest and the frontend with a Yarn 4 immutable install plus a production build.
+
 ## Repository Structure
 
 - `app/` FastAPI backend for RAG queries
@@ -23,14 +25,15 @@ The system accepts only `.txt` and `.pdf`, does not persist uploaded files, and 
 ## Prerequisites
 
 - Python 3.10+
-- Node.js 24+ and Yarn
+- Node.js 24+
+- Corepack-enabled Yarn 4.17.1
 - A Hugging Face token
 
 ## 1) Clone and Install
 
 ```bash
 git clone <your-repo-url>
-cd nlp_projects
+cd doc_rag
 pip install -r requirements.txt
 cd front
 yarn install
@@ -55,6 +58,12 @@ yarn dev
 
 Open the URL printed by Vite (typically http://localhost:5173).
 
+To deploy the frontend through Cloudflare from the `front/` directory:
+
+```bash
+yarn deploy
+```
+
 ## 4) Use the App
 
 - Paste your Hugging Face token in the frontend (stored in browser localStorage)
@@ -76,6 +85,7 @@ Optional backend variables:
 ## Notes
 
 - Uploaded files are processed in-memory and are not stored by the API.
+- Frontend install and build should use Yarn 4.17.1 with Corepack enabled.
 - Frontend build check:
 ```bash
 cd front
